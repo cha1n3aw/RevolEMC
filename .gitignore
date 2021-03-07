@@ -1,0 +1,7 @@
+
+.vs/
+.bin/
+.obj/
+.packages/
+.RevolEMC_compiled/
+.RevolEMC_firmware/

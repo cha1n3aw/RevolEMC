@@ -1,0 +1,148 @@
+﻿<Window x:Class="RevolEMC.Settings"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RevolEMC"
+        mc:Ignorable="d"
+        ResizeMode="NoResize"
+        Title="Настройки" Icon="icon.ico" Height="330" Width="500">
+    <Window.Resources>
+        <Style x:Key="text" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style x:Key="ConPrButton" TargetType="ContentPresenter">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextBlock.Foreground" Value="White"/>
+            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style x:Key="Border" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+        <Style x:Key="SimpleBorder" TargetType="Border" BasedOn="{StaticResource Border}">
+            <Setter Property="Background" Value="#5e38a5"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="8"/>
+                    <Setter Property="Height" Value="25"/>
+                    <Setter Property="Width" Value="120"/>
+                </Style>
+            </Style.Resources>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="CheckBox" >
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type CheckBox}">
+                        <BulletDecorator Background="Transparent" Cursor="Hand">
+                            <BulletDecorator.Bullet>
+                                <Grid Height="20" Width="20">
+                                    <Border Name="RadioOuter" Background="#5e38a5" BorderBrush="#442878" BorderThickness="2" CornerRadius="2" />
+                                    <Border CornerRadius="0" Margin="4" Name="RadioMark" Background="White" Visibility="Hidden" />
+                                </Grid>
+                            </BulletDecorator.Bullet>
+                            <TextBlock Margin="5,1,0,0" Foreground="White" FontFamily="Arial" FontSize="12">
+                        <ContentPresenter TextBlock.FontSize="14"/>
+                            </TextBlock>
+                        </BulletDecorator>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="true">
+                                <Setter TargetName="RadioMark" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="RadioOuter" Property="BorderBrush" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="RadioOuter" Property="Background" Value="#533194"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"></Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Style="{DynamicResource SimpleBorder}">
+                            <ContentPresenter Style="{DynamicResource ConPrButton}">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="{x:Type TextBlock}">
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                        <Setter Property="Width" Value="90"/>
+                                        <Setter Property="Height" Value="25"/>
+                                        <Setter Property="Padding" Value="3"/>
+                                        <Setter Property="TextAlignment" Value="Center"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="border">
+                                    <Setter.Value>
+                                        <LinearGradientBrush>
+                                            <LinearGradientBrush.RelativeTransform>
+                                                <TransformGroup>
+                                                    <ScaleTransform CenterY="0.5" CenterX="0.5"/>
+                                                    <SkewTransform CenterY="0.5" CenterX="0.5"/>
+                                                    <RotateTransform CenterY="0.5" CenterX="0.5" Angle="90"/>
+                                                    <TranslateTransform/>
+                                                </TransformGroup>
+                                            </LinearGradientBrush.RelativeTransform>
+                                            <GradientStop Offset="0.2" Color="#5e38a5"/>
+                                            <GradientStop Offset="1" Color="#442878"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <LinearGradientBrush.RelativeTransform>
+                    <TransformGroup>
+                        <ScaleTransform CenterY="0.5" CenterX="0.5"/>
+                        <SkewTransform CenterY="0.5" CenterX="0.5"/>
+                        <RotateTransform Angle="90" CenterY="0.5" CenterX="0.5"/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </LinearGradientBrush.RelativeTransform>
+                <GradientStop Color="#55535c" Offset="0"/>
+                <GradientStop Color="#9351E6" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Image Source="settings.png" Opacity="0.07" Margin="51,20,-51,-20"/>
+
+        <TextBlock Style="{StaticResource text}" Text="Шагов на оборот" TextWrapping="Wrap" Width="70" Margin="30,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <!--<TextBlock Style="{StaticResource text}" Text="" Margin="30,113,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
+        <!--<TextBlock Style="{StaticResource text}" Text="Язык" Margin="30,173,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
+        <TextBox x:Name="stepsperRevolution" PreviewTextInput="stepsperRevolution_PreviewTextInput" Margin="110,35,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <!--<TextBox Margin="110,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />-->
+        <!--<TextBox Margin="110,170,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />-->
+        <TextBlock Style="{StaticResource text}" Text="Язык" Margin="30,98,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox HorizontalAlignment="Left" Margin="110,98,0,0" VerticalAlignment="Top" Height="25" Width="120">
+            <ComboBoxItem IsSelected="True">
+                <TextBlock>Русский</TextBlock>
+            </ComboBoxItem>
+        </ComboBox>
+        <Button x:Name="SaveSettings" Click="SaveSettings_Click" Content="Сохранить" HorizontalAlignment="Left" Margin="370,250,0,0" VerticalAlignment="Top" Height="25" Width="90"/>
+        <CheckBox x:Name="autoIP" Content="Автоматический IP-Адрес" HorizontalAlignment="Left" Margin="260,38,0,0" VerticalAlignment="Top"/>
+        
+        
+        
+    </Grid>
+</Window>

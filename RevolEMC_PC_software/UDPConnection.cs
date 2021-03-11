@@ -45,6 +45,12 @@ namespace RevolEMC
             public byte[] buffer = new byte[bufSize];
         }
 
+        public void Dispose()
+        {
+            _socket.Shutdown(SocketShutdown.Both);
+            _socket.Close();
+        }
+
         public void Server(int port)
         {
             _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
@@ -60,26 +66,38 @@ namespace RevolEMC
 
         public void Send(string text)
         {
-            byte[] data = Encoding.ASCII.GetBytes(text);
-            _socket.BeginSend(data, 0, data.Length, SocketFlags.None, (ar) =>
+            try
             {
-                State so = (State)ar.AsyncState;
-                int bytes = _socket.EndSend(ar);
-                //Console.WriteLine("SEND: {0}, {1}", bytes, text);
-            }, state);
+                byte[] data = Encoding.ASCII.GetBytes(text);
+                _socket.BeginSend(data, 0, data.Length, SocketFlags.None, (ar) =>
+                {
+                    State so = (State)ar.AsyncState;
+                    int bytes = _socket.EndSend(ar);
+                    //Console.WriteLine("SEND: {0}, {1}", bytes, text);
+                }, state);
+            }
+            catch (ObjectDisposedException e) { }
         }
 
         private void Receive()
         {
-            _socket.BeginReceiveFrom(state.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv = (ar) =>
+            try
             {
-                State so = (State)ar.AsyncState;
-                int bytes = _socket.EndReceiveFrom(ar, ref epFrom);
-                _socket.BeginReceiveFrom(so.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv, so);
-                string data = Encoding.ASCII.GetString(so.buffer, 0, bytes);
-                ReceivedData?.Invoke(this, new Data { action = data[0], steps = long.Parse(data.Substring(1, data.Length - 1)) });
-                //Console.WriteLine("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Encoding.ASCII.GetString(so.buffer, 0, bytes));
-            }, state);
+                _socket.BeginReceiveFrom(state.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv = (ar) =>
+                {
+                    try
+                    {
+                        State so = (State)ar.AsyncState;
+                        int bytes = _socket.EndReceiveFrom(ar, ref epFrom);
+                        _socket.BeginReceiveFrom(so.buffer, 0, bufSize, SocketFlags.None, ref epFrom, recv, so);
+                        string data = Encoding.ASCII.GetString(so.buffer, 0, bytes);
+                        ReceivedData?.Invoke(this, new Data { action = data[0], steps = long.Parse(data.Substring(1, data.Length - 1)) });
+                        //Console.WriteLine("RECV: {0}: {1}, {2}", epFrom.ToString(), bytes, Encoding.ASCII.GetString(so.buffer, 0, bytes));
+                    }
+                    catch (ObjectDisposedException e) { }
+                }, state);
+            }
+            catch (ObjectDisposedException e) { }
         }
     }
 }

@@ -6,8 +6,7 @@
         xmlns:local="clr-namespace:RevolEMC" 
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        ResizeMode="NoResize"
-        Title="Поворотная платформа" Icon="icon.ico" Height="700" Width="1200">
+        Title="Поворотная платформа" Icon="icon.ico" Height="700" Width="1200" IsTabStop="False" ResizeMode="CanMinimize" MouseDown="Window_MouseDown">
     <Window.Resources>
         <Style x:Key="ConPrButton" TargetType="ContentPresenter">
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -496,7 +495,7 @@
             </Style.Resources>
         </Style>
     </Window.Resources>
-    <Grid Width="1200" Height="700" Margin="0,0,0,-6">
+    <Grid x:Name="mainGrid" Width="1200" Height="700" Margin="0,0,0,-6">
         <Grid.Background>
             <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
                 <LinearGradientBrush.RelativeTransform>
@@ -511,17 +510,17 @@
                 <GradientStop Color="#9351E6" Offset="1"/>
             </LinearGradientBrush>
         </Grid.Background>
-        <Menu Height="20" VerticalAlignment="Top">
-            <MenuItem Click="Settings_Click" Header="Настройки"/>
-            <MenuItem Click="About_Click"  Header="О программе"/>
+        <Menu Focusable="False"  Height="20" VerticalAlignment="Top">
+            <MenuItem Focusable="False"  Click="Settings_Click" Header="Настройки"/>
+            <MenuItem Focusable="False"  Click="About_Click"  Header="О программе"/>
         </Menu>
         <Polygon Fill="#1d3d4f" Points="50, 53, 50, 128, 80.5, 90.5"/>
         <Polygon Fill="#1d3d4f" Points="53, 50, 128, 50, 90.5, 80.5"/>
         <Polygon Fill="#1d3d4f" Points="131, 53, 131, 128, 100.5, 90.5"/>
         <Polygon Fill="#1d3d4f" Points="128, 131, 53, 131, 90.5, 100.5"/>
         <Label x:Name="Output" Style="{StaticResource Output}" Content="0.0°" Height="170" Width="170" Margin="700,100,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        <Button x:Name="ForceStopbtn" Click="ForceStop_Click" Style="{DynamicResource ButtonStop}" Content="Аварийный стоп" FontSize="28" Margin="50,550,970,50" Width="180" Height="100"/>
-        <Button x:Name="Reset" Click="Reset_Click" Style="{DynamicResource SimpleButton}" FontSize="22" Margin="674,0,400,70" Width="126" Height="50" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+        <Button Focusable="False"  x:Name="ForceStopbtn" Click="ForceStop_Click" Style="{DynamicResource ButtonStop}" Content="Аварийный стоп" FontSize="28" Margin="50,550,970,50" Width="180" Height="100"/>
+        <Button Focusable="False" x:Name="Reset" Click="Reset_Click" Style="{DynamicResource SimpleButton}" FontSize="22" Margin="674,0,400,70" Width="126" Height="50" HorizontalAlignment="Center" VerticalAlignment="Bottom">
             <TextBlock Text="Сброс" Foreground="White"/>
         </Button>
         <Label  HorizontalAlignment="Left" Margin="136,40,0,0" VerticalAlignment="Top">
@@ -530,28 +529,28 @@
                 <Run FontSize="80" Foreground="#5e574c">ЭМС</Run>
             </TextBlock>
         </Label>
-        <TabControl BorderThickness="0" x:Name="tabCtrl" Background="Transparent" Margin="250,150,530,50" Width="420" Height="500">
-            <TabItem x:Name="tab1" Visibility="Collapsed" Header="TabItem" Width="0" Height="0">
-                <Grid Background="Transparent" Width="420" Height="500">
-                    <RadioButton x:Name="rad1" Checked="rad1_Checked"  GroupName="label" Content="Поворот на заданный угол" Height="25" Width="240" Margin="5, 0, 0, 100" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <RadioButton x:Name="rad2" Checked="rad2_Checked" GroupName="label" Content="Ручное управление" Height="25" Width="180" Margin="5, 00, 0, 0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <RadioButton x:Name="rad3" Checked="rad3_Checked" GroupName="label" Content="Непрерывное вращение" Height="25" Width="220" Margin="5, 100, 0, 0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+        <TabControl BorderThickness="0" KeyboardNavigation.DirectionalNavigation="None" x:Name="tabCtrl" Background="Transparent" Margin="250,150,530,50" Width="420" Height="500">
+            <TabItem x:Name="tab1" KeyboardNavigation.DirectionalNavigation="None" Visibility="Collapsed" Header="TabItem" Width="0" Height="0">
+                <Grid x:Name="buttonGrid" KeyboardNavigation.DirectionalNavigation="None" Background="Transparent" Width="420" Height="500">
+                    <RadioButton x:Name="rad1" Focusable="False"  Checked="rad1_Checked"  GroupName="label" Content="Поворот на заданный угол" Height="25" Width="240" Margin="5, 0, 0, 100" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <RadioButton x:Name="rad2" Focusable="False"  Checked="rad2_Checked" GroupName="label" Content="Ручное управление" Height="25" Width="180" Margin="5, 00, 0, 0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <RadioButton x:Name="rad3" Focusable="False"  Checked="rad3_Checked" GroupName="label" Content="Непрерывное вращение" Height="25" Width="220" Margin="5, 100, 0, 0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
-                    <Button x:Name="RotateCCW" PreviewMouseLeftButtonDown="RotateCCW_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="RotateCCW_PreviewMouseLeftButtonUp" Style="{DynamicResource RotateCCW}" Content="" HorizontalAlignment="Center" Margin="0,70,200,0" VerticalAlignment="Top" Height="80" Width="80"/>
-                    <Button x:Name="RotateCW" PreviewMouseLeftButtonDown="RotateCW_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="RotateCW_PreviewMouseLeftButtonUp" Style="{DynamicResource RotateCW}" Content="" HorizontalAlignment="Center" Margin="120,70,0,0" VerticalAlignment="Top" Height="80" Width="80"/>
-                    <Button x:Name="PlayPause" Click="PlayPause_Click" Style="{DynamicResource Play}" Content="play" HorizontalAlignment="Center"  Margin="0,70,40,0" VerticalAlignment="Top" Height="80" Width="80"/>
+                    <Button x:Name="RotateCCW" KeyboardNavigation.DirectionalNavigation="None" PreviewMouseLeftButtonDown="RotateCCW_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="RotateCCW_PreviewMouseLeftButtonUp" Style="{DynamicResource RotateCCW}" Content="" HorizontalAlignment="Center" Margin="0,70,200,0" VerticalAlignment="Top" Height="80" Width="80"/>
+                    <Button x:Name="RotateCW" KeyboardNavigation.DirectionalNavigation="None" PreviewMouseLeftButtonDown="RotateCW_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="RotateCW_PreviewMouseLeftButtonUp" Style="{DynamicResource RotateCW}" Content="" HorizontalAlignment="Center" Margin="120,70,0,0" VerticalAlignment="Top" Height="80" Width="80"/>
+                    <Button x:Name="PlayPause" KeyboardNavigation.DirectionalNavigation="None" Click="PlayPause_Click" Style="{DynamicResource Play}" Content="play" HorizontalAlignment="Center"  Margin="0,70,40,0" VerticalAlignment="Top" Height="80" Width="80"/>
 
-                    <Button x:Name="btnHome" Click="btnHome_Click" Style="{DynamicResource SimpleButton}" Content="Возврат в нулевое положение" HorizontalAlignment="Center" Margin="0,0,175,15" VerticalAlignment="Bottom" Height="80" Width="150"/>
-                    <Button x:Name="btnSetHome" Click="btnSetHome_Click" Style="{DynamicResource SimpleButton}" Content="Присвоить текущему положению ноль" HorizontalAlignment="Center" Margin="175,0,0,15" VerticalAlignment="Bottom" Height="80" Width="150"/>
+                    <Button x:Name="btnHome" KeyboardNavigation.DirectionalNavigation="None" Focusable="False"  Click="btnHome_Click" Style="{DynamicResource SimpleButton}" Content="Возврат в нулевое положение" HorizontalAlignment="Center" Margin="0,0,175,15" VerticalAlignment="Bottom" Height="80" Width="150"/>
+                    <Button x:Name="btnSetHome" KeyboardNavigation.DirectionalNavigation="None" Focusable="False"  Click="btnSetHome_Click" Style="{DynamicResource SimpleButton}" Content="Присвоить текущему положению ноль" HorizontalAlignment="Center" Margin="175,0,0,15" VerticalAlignment="Bottom" Height="80" Width="150"/>
 
-                    <Button x:Name="minusAngle" Click="minusAngle_Click" Style="{DynamicResource Minus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="145, 0, 0, 100"/>
-                    <Button x:Name="plusAngle" Click="plusAngle_Click" Style="{DynamicResource Plus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="375, 0, 0, 100"/>
-                    <TextBox x:Name="angleBox" IsEnabled="False" TextChanged="angleBox_TextChanged" Height="30" MaxHeight="30" Width="70" MaxWidth="70" MaxLength="6" Margin="260,0,0,100" FontSize="20" TextWrapping="Wrap" TextAlignment="Center" Text="128.0°" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button x:Name="minusAngle" KeyboardNavigation.DirectionalNavigation="None" Focusable="False" Click="minusAngle_Click" Style="{DynamicResource Minus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="145, 0, 0, 100"/>
+                    <Button x:Name="plusAngle" KeyboardNavigation.DirectionalNavigation="None" Focusable="False" Click="plusAngle_Click" Style="{DynamicResource Plus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="375, 0, 0, 100"/>
+                    <TextBox x:Name="angleBox" MouseDoubleClick="SelectText" GotKeyboardFocus="SelectText" PreviewMouseLeftButtonDown="SelectivelyIgnoreMouseButton" KeyboardNavigation.DirectionalNavigation="None" IsEnabled="False" TextChanged="angleBox_TextChanged" Height="30" MaxHeight="30" Width="70" MaxWidth="70" MaxLength="6" Margin="260,0,0,100" FontSize="20" TextWrapping="Wrap" TextAlignment="Center" Text="128.0°" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                     <Label FontSize="17" Content="Скорость вращения, (об/мин)" Margin="20,0,0,130" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
-                    <Button x:Name="minusSpeed" Click="minusSpeed_Click"  Style="{DynamicResource Minus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="145, 210, 0, 0"/>
-                    <Button x:Name="plusSpeed" Click="plusSpeed_Click"  Style="{DynamicResource Plus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="375, 210, 0, 0"/>
-                    <TextBox x:Name="speedBox" TextChanged="speedBox_TextChanged" Height="30" MaxHeight="30" Width="70" MaxWidth="70" MaxLength="4" Margin="260,210,0,0" FontSize="20" TextWrapping="Wrap" TextAlignment="Center" Text="20.0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button x:Name="minusSpeed" Focusable="False" KeyboardNavigation.DirectionalNavigation="None" Click="minusSpeed_Click"  Style="{DynamicResource Minus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="145, 210, 0, 0"/>
+                    <Button x:Name="plusSpeed" Focusable="False" KeyboardNavigation.DirectionalNavigation="None" Click="plusSpeed_Click"  Style="{DynamicResource Plus}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="375, 210, 0, 0"/>
+                    <TextBox x:Name="speedBox" MouseDoubleClick="SelectText" GotKeyboardFocus="SelectText" PreviewMouseLeftButtonDown="SelectivelyIgnoreMouseButton"  KeyboardNavigation.DirectionalNavigation="None" TextChanged="speedBox_TextChanged" Height="30" MaxHeight="30" Width="70" MaxWidth="70" MaxLength="4" Margin="260,210,0,0" FontSize="20" TextWrapping="Wrap" TextAlignment="Center" Text="4.0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
             </TabItem>
             <TabItem x:Name="tab2" Visibility="Collapsed" Header="TabItem">
@@ -578,15 +577,15 @@
                 </Grid>
             </TabItem>
         </TabControl>
-        <Button Content="Ручное&#xa;управление" Click="btn1_Click" x:Name="btn1" FontSize="14" Style="{DynamicResource PressedButton}" Margin="50,200,1000,420" Height="80" Width="150"/>
-        <Button Content="Управление по&#xa;алгоритму" Click="btn2_Click" x:Name="btn2" FontSize="14" Style="{DynamicResource SimpleButton}" Margin="50,367,1000,253" Height="80" Width="150"/>
-        <Label FontSize="35" FontWeight="Bold" Content="ПОВОРОТНАЯ ПЛАТФОРМА" Margin="671,61,29,579" Height="60" Width="500" FontFamily="Arial"/>
-        <Label FontSize="25" Content="Текущий угол стола" Margin="822,115,128,545" Height="40" Width="250" FontFamily="Arial"/>
+        <Button Focusable="False" Content="Ручное&#xa;управление" Click="btn1_Click" x:Name="btn1" FontSize="14" Style="{DynamicResource PressedButton}" Margin="50,200,1000,420" Height="80" Width="150"/>
+        <Button Focusable="False"  Content="Управление по&#xa;алгоритму" Click="btn2_Click" x:Name="btn2" FontSize="14" Style="{DynamicResource SimpleButton}" Margin="50,367,1000,253" Height="80" Width="150"/>
+        <Label FontSize="35" FontWeight="Bold" Content="ПОВОРОТНАЯ ПЛАТФОРМА" Margin="674,81,26,559" Height="60" Width="500" FontFamily="Arial"/>
+        <Label FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center" Content="Текущий угол стола" Margin="710,0,0,230" Height="40" Width="250" FontFamily="Arial"/>
         <Label FontSize="20" Content="Статус" Margin="854,589,246,71" Height="40" Width="100" FontFamily="Arial"/>
-        <Border BorderBrush="White" Background="White" CornerRadius="8" Width="160" Height="40" Margin="949,585,91,75" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <Border x:Name="statusBorder" BorderBrush="White" Background="White" CornerRadius="8" Width="160" Height="40" Margin="949,585,91,75" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock x:Name="statusLabel" Text="Ожидание" TextAlignment="Center" FontSize="20" Height="25" Width="160" FontFamily="Arial" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
-        <Button x:Name="PlayPauseAlg" Click="PlayPauseAlg_Click" Style="{DynamicResource Play1}" HorizontalAlignment="Center"  Margin="675,160,445,0" VerticalAlignment="Top" Height="80" Width="80"/>
+        <Button Focusable="False"  x:Name="PlayPauseAlg" Click="PlayPauseAlg_Click" Style="{DynamicResource Play1}" HorizontalAlignment="Center"  Margin="675,160,445,0" VerticalAlignment="Top" Height="80" Width="80"/>
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="700,100,0,0">
             <Path x:Name="AniPath" Width ="220" Height="220" Opacity="0.9" Stroke="#bbb3c2" StrokeThickness="8" RenderTransformOrigin="0.5, 0.5">
                 <Path.Data>

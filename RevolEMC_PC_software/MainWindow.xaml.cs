@@ -10,6 +10,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Timers;
+using System.Net.NetworkInformation;
 
 namespace RevolEMC
 {
@@ -18,16 +20,19 @@ namespace RevolEMC
         private bool paused = false;
         private bool running = false;
         private int prevpercent = 0;
-        private long steps = 0;
-        private long prevtotalsteps = 0;
+
+        private long current_move = 0;
+        private long previous_total_steps = 0;
+
         private long _totalsteps = 0;
         private long totalsteps
         {
             get => _totalsteps;
             set
             {
-                _totalsteps = value % (settingslist.stepsperrevolution);
-                angle = (double)_totalsteps / settingslist.stepsperrevolution * 360.0;
+                if (value != 0) _totalsteps = value % (settingslist.stepsperrevolution);
+                else _totalsteps = value;
+                if (rotating) angle = (double)_totalsteps / settingslist.stepsperrevolution * 360.0;
             }
         }
         private bool _rotating = false;
@@ -42,14 +47,14 @@ namespace RevolEMC
                     if (value)
                     {
                         _rotating = value;
-                        rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = false;
+                        rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = Reset.IsEnabled = false;
                         statusLabel.Text = "Вращение";
-                        if (steps >= 0 && Anim.By != 360)
+                        if (current_move >= 0 && Anim.By != 360)
                         {
                             Anim.By = 360;
                             Anim1.By = 360;
                         }
-                        else if (steps <= 0 && Anim.By != -360)
+                        else if (current_move <= 0 && Anim.By != -360)
                         {
                             Anim.By = -360;
                             Anim1.By = -360;
@@ -60,7 +65,7 @@ namespace RevolEMC
                     else
                     {
                         _rotating = value;
-                        rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = true;
+                        rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = Reset.IsEnabled = true;
                         statusLabel.Text = "Ожидание";
                         myStoryboard.Pause(this);
                         myStoryboard1.Pause(this);
@@ -74,16 +79,72 @@ namespace RevolEMC
             get => _angle;
             set
             {
-                value = value % 360.0;
-                if (value >= 0.0) _angle = value;
-                else _angle = 360.0 + value;
+                if (value == 360.0) _angle = 0.0;
+                else
+                {
+                    value %= 360.0;
+                    if (value >= 0.0) _angle = value;
+                    else _angle = 360.0 + value;
+                }
                 Output.Dispatcher.Invoke(new Action(delegate { Output.Content = _angle.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "°"; }));
             }
         }
-        private readonly UDPSocket server = new UDPSocket();
-        private readonly UDPSocket client = new UDPSocket();
+        private bool _connected = true;
+        private bool connected
+        {
+            get { return _connected; }
+            set
+            {
+                _connected = value;
+                if (value)
+                {
+                    Dispatcher.Invoke(new Action(delegate
+                    {
+                        mainGrid.IsEnabled = true;
+                        statusBorder.Background = Brushes.White;
+                        statusLabel.Text = "Ожидание";
+                    }));
+                    if (client == null)
+                    {
+                        client = new UDPSocket();
+                        client.Client("192.168.1.1", 8888);
+                        client.ReceivedData += HandleRecievedData;
+                        Send("S");
+                        speedBox_TextChanged(speedBox, null);
+                    }
+                    if (server == null)
+                    {
+                        server = new UDPSocket();
+                        server.Server(8888);
+                    }
+                }
+                else
+                {
+                    Dispatcher.Invoke(new Action(delegate
+                    {
+                        mainGrid.IsEnabled = false;
+                        statusBorder.Background = Brushes.Red;
+                        statusLabel.Text = "Не подключена";
+                    }));
+                    if (server != null)
+                    {
+                        server.Dispose();
+                        server = null;
+                    }
+                    if (client != null)
+                    {
+                        client.ReceivedData -= HandleRecievedData;
+                        client.Dispose();
+                        client = null;
+                    }
+                }
+            }
+        }
+        private UDPSocket server;
+        private UDPSocket client;
         private readonly List<Grid> grids = new List<Grid>();
         private Thread alg;
+        private System.Timers.Timer pingTimer;
         private XamlRadialProgressBar.RadialProgressBar progressBar;
         public delegate void SettingsDelegate(SettingsList settings);
         SettingsList settingslist = new SettingsList();
@@ -91,10 +152,14 @@ namespace RevolEMC
         public MainWindow()
         {
             Init();
-            server.Server(8888);
-            client.Client("192.168.1.1", 8888);
             InitializeComponent();
-            client.ReceivedData += HandleRecievedData;
+            connected = false;
+            Ping(new Object(), new EventArgs() as ElapsedEventArgs);
+            pingTimer = new System.Timers.Timer();
+            pingTimer.Interval = 500;
+            pingTimer.Elapsed += Ping;
+            pingTimer.AutoReset = true;
+            pingTimer.Enabled = true;
             KeyDown += new KeyEventHandler(KeyboardControlPressed);
             KeyUp += new KeyEventHandler(KeyboardControlReleased);
             testbtnAdd_Click(new object(), new RoutedEventArgs());
@@ -105,6 +170,14 @@ namespace RevolEMC
             myStoryboard.SpeedRatio = 5;
             myStoryboard1.SpeedRatio = 2;
             rotating = false;
+        }
+
+        private void Ping(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            if (new Ping().Send("192.168.1.1", 120, System.Text.Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), new PingOptions() { DontFragment = true }).Status == IPStatus.Success)
+                if (!connected) connected = true;
+                else { }
+            else if (connected) connected = false;
         }
 
         private Thread SettingsThread(List<KeyValuePair<string, string>> settingslist)
@@ -125,18 +198,21 @@ namespace RevolEMC
             var settingsList = new List<KeyValuePair<string, string>>()
             {
                 new KeyValuePair<string, string>("StepsPerRevolution", settingslist.stepsperrevolution.ToString()),
-                new KeyValuePair<string, string>("AutoIP", settingslist.autoip.ToString())
+                new KeyValuePair<string, string>("AutoIP", settingslist.autoip.ToString()),
+                new KeyValuePair<string, string>("InvertDir", settingslist.invertdir.ToString())
             };
             return settingsList;
         }
         private void Init()
         {
             settingslist.autoip = Convert.ToBoolean(ConfigurationManager.AppSettings["AutoIP"]);
+            settingslist.invertdir = Convert.ToBoolean(ConfigurationManager.AppSettings["InvertDir"]);
             settingslist.stepsperrevolution = Convert.ToInt32(ConfigurationManager.AppSettings["StepsPerRevolution"]);
         }
 
         private void KeyboardControlReleased(object sender, KeyEventArgs e)
         {
+            if (connected)
             switch (e.Key)
             {
                 case Key.Right:
@@ -150,6 +226,7 @@ namespace RevolEMC
 
         private void KeyboardControlPressed(object sender, KeyEventArgs e)
         {
+            if (connected)
             switch (e.Key)
             {
                 case Key.Right:
@@ -159,63 +236,67 @@ namespace RevolEMC
                     { if (!rotating) RotateCCW_PreviewMouseLeftButtonDown(new object(), null); }
                     break;
                 case Key.Down:
-                    { PlayPause_Click(new object(), new RoutedEventArgs()); }
+                    { if (rad2.IsChecked == false) PlayPause_Click(new object(), new RoutedEventArgs()); }
                     break;
             }
         }
 
         private void HandleRecievedData(object sender, UDPSocket.Data data)
         {
-            if (data.action == 'M' && rotating)
+            if (connected)
             {
-                long elapsedsteps = steps - data.steps;
-                int percentage = (int)(100 * Math.Abs(elapsedsteps) / Math.Abs(steps));
-                if (prevpercent != percentage && progressBar != null)
-                    progressBar.Dispatcher.Invoke(new Action(delegate
-                    {
-                        if (tab2.IsSelected)
-                        {
-                            progressBar.Value = percentage;
-                            prevpercent = percentage;
-                        }
-                    }));
-                totalsteps = prevtotalsteps + elapsedsteps;
-            }
-            else if (data.action == 'P') totalsteps = prevtotalsteps + steps - data.steps;
-            else if (data.action == 'R') totalsteps = prevtotalsteps + steps - data.steps;
-            else if (data.action == 'S')
-            {
-                totalsteps = prevtotalsteps + steps - data.steps;
-                if (progressBar != null) tab2.Dispatcher.Invoke(new Action(delegate
+                long current_move_elapsed_steps = current_move - data.steps;
+                if (data.action == 'M')
                 {
-                    if (tab2.IsSelected) Reset_Click(new object(), new RoutedEventArgs());
-                }));
-                running = false;
-                rotating = false;
-                paused = false;
-            }
-            else if(data.action == 'F')
-            {
-                totalsteps = prevtotalsteps + steps;
-                if (progressBar != null) tab2.Dispatcher.Invoke(new Action(delegate
+                    if (data.steps == 0)
                     {
-                        if (tab2.IsSelected) progressBar.Value = 100;
-                    }));
-                rotating = false;
+                        totalsteps = previous_total_steps + current_move;
+                        if (progressBar != null) progressBar.Dispatcher.Invoke(new Action(delegate { if (tab2.IsSelected) progressBar.Value = 100; }));
+                        rotating = false;
+                        PlayPause.Dispatcher.Invoke(new Action(delegate { PlayPause.IsEnabled = false; }));
+                    }
+                    else
+                    {
+                        totalsteps = previous_total_steps + current_move_elapsed_steps;
+                        if (alg != null && alg.ThreadState != ThreadState.Aborted)
+                        {
+                            int percentage = (int)(100 * Math.Abs(current_move_elapsed_steps) / Math.Abs(current_move));
+                            if (prevpercent != percentage && progressBar != null) Dispatcher.Invoke(new Action(delegate
+                            {
+                                if (tab2.IsSelected)
+                                {
+                                    progressBar.Value = percentage;
+                                    prevpercent = percentage;
+                                }
+                            }));
+                        }
+                    }
+                }
+                else if (data.action == 'S')
+                {
+                    totalsteps = previous_total_steps + current_move_elapsed_steps;
+                    if (progressBar != null) tab2.Dispatcher.Invoke(new Action(delegate { if (tab2.IsSelected) Reset_Click(new object(), new RoutedEventArgs()); }));
+                    previous_total_steps = totalsteps;
+                    running = false;
+                    rotating = false;
+                    paused = false;
+                    PlayPause.Dispatcher.Invoke(new Action(delegate { PlayPause.IsEnabled = false; }));
+                    current_move = 0;
+                }
             }
         }
 
         private void Rotation(long _steps)
         {
-            prevtotalsteps = totalsteps;
-            steps = _steps;
+            previous_total_steps = totalsteps;
+            current_move = _steps;
             rotating = true;
-            client.Send(_steps.ToString());
+            Send(_steps.ToString());
         }
 
         private void ForceStop()
         {
-            client.Send("S");
+            Send("S");
         }
 
         private void ForceStop_Click(object sender, RoutedEventArgs e)
@@ -225,15 +306,13 @@ namespace RevolEMC
                 alg.Abort();
                 alg = null;
             }
+            PlayPause.IsEnabled = false;
+            rotating = false;
             ForceStop();
-            steps = 0;
-            prevpercent = 0;
-            prevtotalsteps = 0;
         }
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            ForceStop();
             if (tab1.IsSelected)
             {
                 angleBox.Text = "0.0°";
@@ -303,8 +382,8 @@ namespace RevolEMC
         private void btnSetHome_Click(object sender, RoutedEventArgs e)
         {
             totalsteps = 0;
-            prevtotalsteps = 0;
-            steps = 0;
+            previous_total_steps = 0;
+            current_move = 0;
             angle = 0.0;
         }
 
@@ -325,13 +404,16 @@ namespace RevolEMC
         private void angleBox_TextChanged(object sender, TextChangedEventArgs e)
         {
 
-            string text = angleBox.Text;
+            string text = angleBox.Text.Trim('°');
             angleBox.Dispatcher.BeginInvoke(new Action(() => 
             {
-                if (new Regex(@"^([0-9]{0,3}\.?[0-9]°)$|^([0-9]{1,3}\.?[0-9]?°)$").IsMatch(text)) //^-?[0-9]{0,3}\.?[0-9]?°$
+                if (new Regex(@"^([0-9]{0,3}\.?[0-9])$|^([0-9]{1,3}\.?[0-9]?)$").IsMatch(text)) //^-?[0-9]{0,3}\.?[0-9]?°$
                 {
-                    text = text.Trim('°');
-                    if (text != string.Empty && text != "-" && text != "." && double.Parse(text, System.Globalization.CultureInfo.InvariantCulture) > 360.0) angleBox.Text = "360.0°";
+                    if (text != string.Empty && text != "-" && text != ".")
+                    {
+                        if (double.Parse(text, System.Globalization.CultureInfo.InvariantCulture) > 360.0) angleBox.Text = "360.0°";
+                        else angleBox.Text = text + "°";
+                    }
                 }
                 else angleBox.Undo();
             }));
@@ -356,21 +438,32 @@ namespace RevolEMC
             Regex regex = new Regex(@"^([0-9]{0,2}\.?[0-9])$|^([0-9]{1,3}\.?[0-9]?)$"); //^[0-9]{0,2}.[0-9]?$
             speedBox.Dispatcher.BeginInvoke(new Action(() => 
             {
-                if (regex.IsMatch(speedBox.Text)) client.Send($"V{(int)(settingslist.stepsperrevolution * double.Parse(speedBox.Text, System.Globalization.CultureInfo.InvariantCulture) / 60)}");
+                if (regex.IsMatch(speedBox.Text))
+                {
+                    Send($"V{(int)(settingslist.stepsperrevolution * double.Parse(speedBox.Text, System.Globalization.CultureInfo.InvariantCulture) / 60)}");
+                    int c = (int)Math.Round((double)settingslist.stepsperrevolution / 3600, MidpointRounding.AwayFromZero);
+                    if (c == 0) c = 1;
+                    Send($"C{c}");
+                }
                 else speedBox.Undo(); 
             }));
+        }
+
+        private void Send(string data)
+        {
+            if (connected) client.Send(data);
         }
 
         private void PlayPause_Click(object sender, RoutedEventArgs e)
         {
             if (rotating)
             {
-                client.Send("P");
+                Send("P");
                 rotating = false;
             }
             else
             {
-                client.Send("R");
+                Send("R");
                 rotating = true;
             }
         }
@@ -390,12 +483,12 @@ namespace RevolEMC
             }
             else if (running && paused && alg != null)
             {
-                client.Send("R");
+                Send("R");
                 paused = false;
             }
             else if (running && !paused && alg != null)
             {
-                client.Send("P");
+                Send("P");
                 paused = true;
             }
         }
@@ -449,8 +542,12 @@ namespace RevolEMC
         {
             if (rad2.IsChecked == true) PlayPause.IsEnabled = false;
             else PlayPause.IsEnabled = true;
-            if (rad1.IsChecked == false) Rotation(32000);
-            else if (!rotating && angleBox.Text != "°") Rotation((long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
+            if (rad1.IsChecked == false)
+                if (!settingslist.invertdir) Rotation(2000000);
+                else Rotation(-2000000);
+            else if (!rotating)
+                if (!settingslist.invertdir) Rotation((long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
+                else Rotation(0 - (long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
         }
 
         private void RotateCW_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -462,8 +559,12 @@ namespace RevolEMC
         {
             if (rad2.IsChecked == true) PlayPause.IsEnabled = false;
             else PlayPause.IsEnabled = true;
-            if (rad1.IsChecked == false) Rotation(-32000);
-            else if (!rotating && angleBox.Text != "°") Rotation(0 - (long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
+            if (rad1.IsChecked == false)
+                if (!settingslist.invertdir) Rotation(-2000000);
+                else Rotation(2000000);
+            else if (!rotating && angleBox.Text != "°")
+                if (!settingslist.invertdir) Rotation(0 - (long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
+                else Rotation((long)(settingslist.stepsperrevolution * double.Parse(angleBox.Text.Trim('°'), System.Globalization.CultureInfo.InvariantCulture) / 360));
         }
 
         private void RotateCCW_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -491,17 +592,25 @@ namespace RevolEMC
 
         private void dynAngleBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string text = sender.GetType().GetProperty("Text").GetValue(sender, null).ToString();
+            string text = sender.GetType().GetProperty("Text").GetValue(sender, null).ToString().Trim('°');
             ((TextBox)sender).Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (new Regex(@"^(-?[0-9]{0,3}\.?[0-9]°)$|^(-?[0-9]{1,3}\.?[0-9]?°)$").IsMatch(text)) //^-?[0-9]{0,3}\.?[0-9]?°$
+                if (new Regex(@"^(-?[0-9]{0,3}\.?[0-9])$|^(-?[0-9]{1,3}\.?[0-9]?)$").IsMatch(text)) //^-?[0-9]{0,3}\.?[0-9]?°$
                 {
-                    text = text.Trim('°');
-                    if (text != string.Empty && text != "-" && text != "." && double.Parse(text, System.Globalization.CultureInfo.InvariantCulture) > 360.0)
+                    if (text != string.Empty && text != "-" && text != ".")
                     {
-                        PropertyInfo fieldPropertyInfo = sender.GetType().GetProperty("Text");
-                        fieldPropertyInfo.GetValue(sender, null);
-                        fieldPropertyInfo.SetValue(sender, "360.0°", null);
+                        if (double.Parse(text, System.Globalization.CultureInfo.InvariantCulture) > 360.0)
+                        {
+                            PropertyInfo fieldPropertyInfo = sender.GetType().GetProperty("Text");
+                            fieldPropertyInfo.GetValue(sender, null);
+                            fieldPropertyInfo.SetValue(sender, "360.0°", null);
+                        }
+                        else
+                        {
+                            PropertyInfo fieldPropertyInfo = sender.GetType().GetProperty("Text");
+                            fieldPropertyInfo.GetValue(sender, null);
+                            fieldPropertyInfo.SetValue(sender, text + "°", null);
+                        }
                     }
                 }
                 else ((TextBox)sender).Undo();
@@ -525,6 +634,9 @@ namespace RevolEMC
 
             TextBox dynTxtAngle = new TextBox() { Name = $"dynTxtAngle{grids.Count}", Text = "0.0°", Style = FindResource("dynamicTextBox") as Style };
             dynTxtAngle.TextChanged += dynAngleBox_TextChanged;
+            dynTxtAngle.MouseDoubleClick += SelectText;
+            dynTxtAngle.GotKeyboardFocus += SelectText;
+            dynTxtAngle.PreviewMouseLeftButtonDown += SelectivelyIgnoreMouseButton;
             Grid.SetColumn(dynTxtAngle, 1);
             grid.Children.Add(dynTxtAngle);
 
@@ -534,6 +646,9 @@ namespace RevolEMC
 
             TextBox dynTxtSpeed = new TextBox() { Name = $"dynTxtTiming{grids.Count}", Text = "0", Style = FindResource("dynamicTextBox") as Style };
             dynTxtSpeed.TextChanged += dynTimingBox_TextChanged;
+            dynTxtSpeed.MouseDoubleClick += SelectText;
+            dynTxtSpeed.GotKeyboardFocus += SelectText;
+            dynTxtSpeed.PreviewMouseLeftButtonDown += SelectivelyIgnoreMouseButton;
             Grid.SetColumn(dynTxtSpeed, 3);
             grid.Children.Add(dynTxtSpeed);
 
@@ -563,6 +678,7 @@ namespace RevolEMC
         private void SetSettings(SettingsList settings)
         {
             settingslist = settings;
+            speedBox_TextChanged(speedBox, null);
             SettingsThread(SettingsList());
         }
 
@@ -570,6 +686,27 @@ namespace RevolEMC
         {
             Settings settings = new Settings(new SettingsDelegate(SetSettings), settingslist);
             settings.ShowDialog();
+        }
+
+        private void SelectText(object sender, RoutedEventArgs e)
+        {
+            TextBox tb = (sender as TextBox);
+            if (tb != null) tb.SelectAll();
+        }
+
+        private void SelectivelyIgnoreMouseButton(object sender, MouseButtonEventArgs e)
+        {
+            TextBox tb = (sender as TextBox);
+            if (tb != null && !tb.IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+                tb.Focus();
+            }
+        }
+
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Keyboard.ClearFocus();
         }
     }
 }

@@ -7,6 +7,7 @@ namespace RevolEMC
 	public class SettingsList
     {
 		public bool _autoip = false;
+		public bool invertdir = false;
 		public bool autoip
 		{
 			get => _autoip;
@@ -25,6 +26,7 @@ namespace RevolEMC
 			InitializeComponent();
 			stepsperRevolution.Text = sl.stepsperrevolution.ToString();
 			autoIP.IsChecked = sl.autoip;
+			invertDir.IsChecked = sl.invertdir;
 			sd = sender;
 		}
 
@@ -32,6 +34,7 @@ namespace RevolEMC
 		{
 			sl.stepsperrevolution = long.Parse(stepsperRevolution.Text);
 			sl.autoip = (bool)autoIP.IsChecked;
+			sl.invertdir = (bool)invertDir.IsChecked;
 			sd(sl);
 			Close();
 		}

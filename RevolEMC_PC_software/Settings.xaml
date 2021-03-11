@@ -141,8 +141,6 @@
         </ComboBox>
         <Button x:Name="SaveSettings" Click="SaveSettings_Click" Content="Сохранить" HorizontalAlignment="Left" Margin="370,250,0,0" VerticalAlignment="Top" Height="25" Width="90"/>
         <CheckBox x:Name="autoIP" Content="Автоматический IP-Адрес" HorizontalAlignment="Left" Margin="260,38,0,0" VerticalAlignment="Top"/>
-        
-        
-        
+        <CheckBox x:Name="invertDir" Content="Инвертировать направление" HorizontalAlignment="Left" Margin="260,100,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

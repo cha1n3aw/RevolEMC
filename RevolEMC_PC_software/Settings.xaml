@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:RevolEMC"
         mc:Ignorable="d"
         ResizeMode="NoResize"
-        Title="Настройки" Icon="icon.ico" Height="330" Width="500">
+        Title="{DynamicResource ResourceKey=SettingTitle}" Icon="icon.ico" Height="330" Width="500">
     <Window.Resources>
         <Style x:Key="text" TargetType="TextBlock">
             <Setter Property="FontSize" Value="14"/>
@@ -127,20 +127,19 @@
 
         <Image Source="settings.png" Opacity="0.07" Margin="51,20,-51,-20"/>
 
-        <TextBlock Style="{StaticResource text}" Text="Шагов на оборот" TextWrapping="Wrap" Width="70" Margin="30,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <!--<TextBlock Style="{StaticResource text}" Text="" Margin="30,113,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
-        <!--<TextBlock Style="{StaticResource text}" Text="Язык" Margin="30,173,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>-->
+        <TextBlock Style="{StaticResource text}" Text="{DynamicResource ResourceKey=spr}" TextWrapping="Wrap" Width="70" Margin="30,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="stepsperRevolution" PreviewTextInput="stepsperRevolution_PreviewTextInput" Margin="110,35,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <!--<TextBox Margin="110,110,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />-->
-        <!--<TextBox Margin="110,170,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />-->
-        <TextBlock Style="{StaticResource text}" Text="Язык" Margin="30,98,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <ComboBox HorizontalAlignment="Left" Margin="110,98,0,0" VerticalAlignment="Top" Height="25" Width="120">
-            <ComboBoxItem IsSelected="True">
+        <TextBlock Style="{StaticResource text}" Text="{DynamicResource ResourceKey=SettingsLang}" Margin="30,98,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox  x:Name="comboLanguage" HorizontalAlignment="Left" Margin="110,98,0,0" VerticalAlignment="Top" Height="25" Width="120">
+            <ComboBoxItem>
                 <TextBlock>Русский</TextBlock>
             </ComboBoxItem>
+            <ComboBoxItem>
+                <TextBlock>English</TextBlock>
+            </ComboBoxItem>
         </ComboBox>
-        <Button x:Name="SaveSettings" Click="SaveSettings_Click" Content="Сохранить" HorizontalAlignment="Left" Margin="370,250,0,0" VerticalAlignment="Top" Height="25" Width="90"/>
-        <CheckBox x:Name="autoIP" Content="Автоматический IP-Адрес" HorizontalAlignment="Left" Margin="260,38,0,0" VerticalAlignment="Top"/>
-        <CheckBox x:Name="invertDir" Content="Инвертировать направление" HorizontalAlignment="Left" Margin="260,100,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="SaveSettings" Click="SaveSettings_Click" Content="{DynamicResource ResourceKey=Save}" HorizontalAlignment="Left" Margin="370,250,0,0" VerticalAlignment="Top" Height="25" Width="90"/>
+        <CheckBox x:Name="autoIP" Content="{DynamicResource ResourceKey=AutoIP}" HorizontalAlignment="Left" Margin="260,38,0,0" VerticalAlignment="Top"/>
+        <CheckBox x:Name="invertDir" Content="{DynamicResource ResourceKey=Invert}" HorizontalAlignment="Left" Margin="260,100,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

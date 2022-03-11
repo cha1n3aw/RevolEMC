@@ -48,7 +48,8 @@ namespace RevolEMC
                     {
                         _rotating = value;
                         rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = Reset.IsEnabled = false;
-                        statusLabel.Text = "Вращение";
+                        if (settingslist.languageIndex == 0) statusLabel.Text = "Вращение";
+                        else if (settingslist.languageIndex == 1) statusLabel.Text = "Rotating";
                         if (current_move >= 0 && Anim.By != 360)
                         {
                             Anim.By = 360;
@@ -66,7 +67,8 @@ namespace RevolEMC
                     {
                         _rotating = value;
                         rad1.IsEnabled = rad2.IsEnabled = rad3.IsEnabled = Reset.IsEnabled = true;
-                        statusLabel.Text = "Ожидание";
+                        if (settingslist.languageIndex == 0) statusLabel.Text = "Ожидание";
+                        else if (settingslist.languageIndex == 1) statusLabel.Text = "Standby";
                         myStoryboard.Pause(this);
                         myStoryboard1.Pause(this);
                     }
@@ -96,48 +98,54 @@ namespace RevolEMC
             set
             {
                 _connected = value;
-                if (value)
+                try
                 {
-                    Dispatcher.Invoke(new Action(delegate
+                    if (value)
                     {
-                        mainGrid.IsEnabled = true;
-                        statusBorder.Background = Brushes.White;
-                        statusLabel.Text = "Ожидание";
-                    }));
-                    if (client == null)
-                    {
-                        client = new UDPSocket();
-                        client.Client("192.168.1.1", 8888);
-                        client.ReceivedData += HandleRecievedData;
-                        Send("S");
-                        speedBox_TextChanged(speedBox, null);
+                        Dispatcher.Invoke(new Action(delegate
+                        {
+                            mainGrid.IsEnabled = true;
+                            statusBorder.Background = Brushes.White;
+                            if (settingslist.languageIndex == 0) statusLabel.Text = "Ожидание";
+                            else if (settingslist.languageIndex == 1) statusLabel.Text = "Standby";
+                        }));
+                        if (client == null)
+                        {
+                            client = new UDPSocket();
+                            client.Client("192.168.1.1", 8888);
+                            client.ReceivedData += HandleRecievedData;
+                            Send("S");
+                            speedBox_TextChanged(speedBox, null);
+                        }
+                        if (server == null)
+                        {
+                            server = new UDPSocket();
+                            server.Server(8888);
+                        }
                     }
-                    if (server == null)
+                    else
                     {
-                        server = new UDPSocket();
-                        server.Server(8888);
+                        Dispatcher.Invoke(new Action(delegate
+                        {
+                            mainGrid.IsEnabled = false;
+                            statusBorder.Background = Brushes.Red;
+                            if (settingslist.languageIndex == 0) statusLabel.Text = "Не подключена";
+                            else if (settingslist.languageIndex == 1) statusLabel.Text = "Not connected";
+                        }));
+                        if (server != null)
+                        {
+                            server.Dispose();
+                            server = null;
+                        }
+                        if (client != null)
+                        {
+                            client.ReceivedData -= HandleRecievedData;
+                            client.Dispose();
+                            client = null;
+                        }
                     }
                 }
-                else
-                {
-                    Dispatcher.Invoke(new Action(delegate
-                    {
-                        mainGrid.IsEnabled = false;
-                        statusBorder.Background = Brushes.Red;
-                        statusLabel.Text = "Не подключена";
-                    }));
-                    if (server != null)
-                    {
-                        server.Dispose();
-                        server = null;
-                    }
-                    if (client != null)
-                    {
-                        client.ReceivedData -= HandleRecievedData;
-                        client.Dispose();
-                        client = null;
-                    }
-                }
+                catch (Exception) { }
             }
         }
         private UDPSocket server;
@@ -151,8 +159,52 @@ namespace RevolEMC
 
         public MainWindow()
         {
-            Init();
             InitializeComponent();
+            Init();
+        }
+
+        private void Ping(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                if (new Ping().Send("192.168.1.1", 120, System.Text.Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), new PingOptions() { DontFragment = true }).Status == IPStatus.Success)
+                    if (!connected) connected = true;
+                    else { }
+                else if (connected && new Ping().Send("192.168.1.1", 120, System.Text.Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), new PingOptions() { DontFragment = true }).Status != IPStatus.Success) connected = false;
+            }
+            catch (Exception) { }
+        }
+
+        private Thread SettingsThread(List<KeyValuePair<string, string>> settingslist)
+        {
+            Thread settingsthread = new Thread(() => SetSetting(settingslist)) { IsBackground = false };
+            settingsthread.Start();
+            return settingsthread;
+        }
+        private void SetSetting(List<KeyValuePair<string, string>> settingslist)
+        {
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
+            foreach (KeyValuePair<string, string> pair in settingslist) configuration.AppSettings.Settings[pair.Key].Value = pair.Value;
+            configuration.Save(ConfigurationSaveMode.Full, true);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
+        private List<KeyValuePair<string, string>> SettingsList()
+        {
+            var settingsList = new List<KeyValuePair<string, string>>()
+            {
+                new KeyValuePair<string, string>("StepsPerRevolution", settingslist.stepsperrevolution.ToString()),
+                new KeyValuePair<string, string>("AutoIP", settingslist.autoip.ToString()),
+                new KeyValuePair<string, string>("InvertDir", settingslist.invertdir.ToString()),
+                new KeyValuePair<string, string>("SelectedLanguageIndex", settingslist.languageIndex.ToString())
+            };
+            return settingsList;
+        }
+        private void Init()
+        {
+            settingslist.autoip = Convert.ToBoolean(ConfigurationManager.AppSettings["AutoIP"]);
+            settingslist.invertdir = Convert.ToBoolean(ConfigurationManager.AppSettings["InvertDir"]);
+            settingslist.stepsperrevolution = Convert.ToInt32(ConfigurationManager.AppSettings["StepsPerRevolution"]);
+            settingslist.languageIndex = Convert.ToInt32(ConfigurationManager.AppSettings["SelectedLanguageIndex"]);
             connected = false;
             Ping(new Object(), new EventArgs() as ElapsedEventArgs);
             pingTimer = new System.Timers.Timer();
@@ -170,44 +222,6 @@ namespace RevolEMC
             myStoryboard.SpeedRatio = 5;
             myStoryboard1.SpeedRatio = 2;
             rotating = false;
-        }
-
-        private void Ping(Object source, System.Timers.ElapsedEventArgs e)
-        {
-            if (new Ping().Send("192.168.1.1", 120, System.Text.Encoding.ASCII.GetBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), new PingOptions() { DontFragment = true }).Status == IPStatus.Success)
-                if (!connected) connected = true;
-                else { }
-            else if (connected) connected = false;
-        }
-
-        private Thread SettingsThread(List<KeyValuePair<string, string>> settingslist)
-        {
-            Thread settingsthread = new Thread(() => SetSetting(settingslist)) { IsBackground = false };
-            settingsthread.Start();
-            return settingsthread;
-        }
-        private static void SetSetting(List<KeyValuePair<string, string>> settingslist)
-        {
-            Configuration configuration = ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
-            foreach (KeyValuePair<string, string> pair in settingslist) configuration.AppSettings.Settings[pair.Key].Value = pair.Value;
-            configuration.Save(ConfigurationSaveMode.Full, true);
-            ConfigurationManager.RefreshSection("appSettings");
-        }
-        private List<KeyValuePair<string, string>> SettingsList()
-        {
-            var settingsList = new List<KeyValuePair<string, string>>()
-            {
-                new KeyValuePair<string, string>("StepsPerRevolution", settingslist.stepsperrevolution.ToString()),
-                new KeyValuePair<string, string>("AutoIP", settingslist.autoip.ToString()),
-                new KeyValuePair<string, string>("InvertDir", settingslist.invertdir.ToString())
-            };
-            return settingsList;
-        }
-        private void Init()
-        {
-            settingslist.autoip = Convert.ToBoolean(ConfigurationManager.AppSettings["AutoIP"]);
-            settingslist.invertdir = Convert.ToBoolean(ConfigurationManager.AppSettings["InvertDir"]);
-            settingslist.stepsperrevolution = Convert.ToInt32(ConfigurationManager.AppSettings["StepsPerRevolution"]);
         }
 
         private void KeyboardControlReleased(object sender, KeyEventArgs e)
@@ -678,6 +692,7 @@ namespace RevolEMC
         private void SetSettings(SettingsList settings)
         {
             settingslist = settings;
+            connected = connected;
             speedBox_TextChanged(speedBox, null);
             SettingsThread(SettingsList());
         }

@@ -22,22 +22,26 @@ namespace RevolEMC
 
         public void setIP(string ip_address, string subnet_mask, string gateway)
         {
-            ManagementClass objMC = new ManagementClass("Win32_NetworkAdapterConfiguration");
-            ManagementObjectCollection objMOC = objMC.GetInstances();
-            foreach (ManagementObject objMO in objMOC)
+            try
             {
-                if ((bool)objMO["IPEnabled"])
+                ManagementClass objMC = new ManagementClass("Win32_NetworkAdapterConfiguration");
+                ManagementObjectCollection objMOC = objMC.GetInstances();
+                foreach (ManagementObject objMO in objMOC)
                 {
-                    ManagementBaseObject newIP = objMO.GetMethodParameters("EnableStatic");
-                    newIP["IPAddress"] = new string[] { ip_address };
-                    newIP["SubnetMask"] = new string[] { subnet_mask };
-                    objMO.InvokeMethod("EnableStatic", newIP, null);
-                    ManagementBaseObject newGateway = objMO.GetMethodParameters("SetGateways");
-                    newGateway["DefaultIPGateway"] = new string[] { gateway };
-                    newGateway["GatewayCostMetric"] = new int[] { 1 };
-                    objMO.InvokeMethod("SetGateways", newGateway, null);
+                    if ((bool)objMO["IPEnabled"])
+                    {
+                        ManagementBaseObject newIP = objMO.GetMethodParameters("EnableStatic");
+                        newIP["IPAddress"] = new string[] { ip_address };
+                        newIP["SubnetMask"] = new string[] { subnet_mask };
+                        objMO.InvokeMethod("EnableStatic", newIP, null);
+                        ManagementBaseObject newGateway = objMO.GetMethodParameters("SetGateways");
+                        newGateway["DefaultIPGateway"] = new string[] { gateway };
+                        newGateway["GatewayCostMetric"] = new int[] { 1 };
+                        objMO.InvokeMethod("SetGateways", newGateway, null);
+                    }
                 }
             }
+            catch (Exception) { }
         }
 
         public class State
@@ -53,15 +57,23 @@ namespace RevolEMC
 
         public void Server(int port)
         {
-            _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
-            _socket.Bind(new IPEndPoint(IPAddress.Any, port));
-            Receive();
+            try
+            {
+                _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.ReuseAddress, true);
+                _socket.Bind(new IPEndPoint(IPAddress.Any, port));
+                Receive();
+            }
+            catch (Exception) { }
         }
 
         public void Client(string address, int port)
         {
-            _socket.Connect(IPAddress.Parse(address), port);
-            Receive();
+            try
+            {
+                _socket.Connect(IPAddress.Parse(address), port);
+                Receive();
+            }
+            catch (Exception) { }
         }
 
         public void Send(string text)

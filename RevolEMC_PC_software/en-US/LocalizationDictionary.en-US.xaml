@@ -1,0 +1,44 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:String x:Key="ResourceDictionaryName">Loc-en-US</sys:String>
+    
+    <!--Menu-->
+    <sys:String x:Key="MainTitle">Turntable</sys:String>
+    <sys:String x:Key="MenuSettings">Settings</sys:String>
+    <sys:String x:Key="MenuAbout">About</sys:String>
+    <sys:String x:Key="SettingTitle">Settings</sys:String>
+
+    <!--Controls-->
+    <sys:String x:Key="ForceStop">Emergency stop</sys:String>
+    <sys:String x:Key="Reset">Reset</sys:String>
+    <sys:String x:Key="Tab1Radio1">Rotate by a given angle</sys:String>
+    <sys:String x:Key="Tab1Radio2">Manual control</sys:String>
+    <sys:String x:Key="Tab1Radio3">Continuous rotation</sys:String>
+    <sys:String x:Key="Home">Return to zero position</sys:String>
+    <sys:String x:Key="SetHome">Set current position to zero</sys:String>
+    <sys:String x:Key="Speed">Rotational speed, (rpm)</sys:String>
+    <sys:String x:Key="btn1">Manual control</sys:String>
+    <sys:String x:Key="btn2">Algorithm control</sys:String>
+    <sys:String x:Key="Add">Add</sys:String>
+    <sys:String x:Key="FromZero">From zero</sys:String>
+    <sys:String x:Key="FromLast">From the last position</sys:String>
+    <sys:String x:Key="Sec">Seconds</sys:String>
+    <sys:String x:Key="Min">Minutes</sys:String>
+    <sys:String x:Key="Save">Save</sys:String>
+
+    <!--labels-->
+    <sys:String x:Key="Revol">Revol</sys:String>
+    <sys:String x:Key="EMC">EMC</sys:String>
+    <sys:String x:Key="TurnTable">ROTATING PLATFORM</sys:String>
+    <sys:String x:Key="CurrentAngle">Current table angle</sys:String>
+    <sys:String x:Key="Status">Status</sys:String>
+    <sys:String x:Key="AlgAngle">Angle</sys:String>
+    <sys:String x:Key="AlgTime">Delay</sys:String>
+    <sys:String x:Key="spr">Steps per revolution</sys:String>
+    <sys:String x:Key="SettingsLang">Language</sys:String>
+    <sys:String x:Key="AutoIP">Assign IP automatically</sys:String>
+    <sys:String x:Key="Invert">Invert direction</sys:String>
+
+</ResourceDictionary>

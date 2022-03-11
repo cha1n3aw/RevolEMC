@@ -1,0 +1,43 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <sys:String x:Key="ResourceDictionaryName">Loc-ru-RU</sys:String>
+
+    <!--Menu-->
+    <sys:String x:Key="MainTitle">Поворотная платформа</sys:String>
+    <sys:String x:Key="MenuSettings">Настройки</sys:String>
+    <sys:String x:Key="MenuAbout">О программе</sys:String>
+    <sys:String x:Key="SettingTitle">Настройки</sys:String>
+    <!--Controls-->
+    <sys:String x:Key="ForceStop">Аварийный стоп</sys:String>
+    <sys:String x:Key="Reset">Сброс</sys:String>
+    <sys:String x:Key="Tab1Radio1">Поворот на заданный угол</sys:String>
+    <sys:String x:Key="Tab1Radio2">Ручное управление</sys:String>
+    <sys:String x:Key="Tab1Radio3">Непрерывное вращение</sys:String>
+    <sys:String x:Key="Home">Возврат в нулевое положение</sys:String>
+    <sys:String x:Key="SetHome">Присвоить текущему положению ноль</sys:String>
+    <sys:String x:Key="Speed">Скорость вращения, (об/мин)</sys:String>
+    <sys:String x:Key="btn1">Ручноe управление</sys:String>
+    <sys:String x:Key="btn2">Управление по алгоритму</sys:String>
+    <sys:String x:Key="Add">Добавить строку</sys:String>
+    <sys:String x:Key="FromZero">От нуля</sys:String>
+    <sys:String x:Key="FromLast">От последнего положения</sys:String>
+    <sys:String x:Key="Sec">Секунды</sys:String>
+    <sys:String x:Key="Min">Минуты</sys:String>
+    <sys:String x:Key="Save">Сохранить</sys:String>
+
+    <!--labels-->
+    <sys:String x:Key="Revol">Револ</sys:String>
+    <sys:String x:Key="EMC">ЭМС</sys:String>
+    <sys:String x:Key="TurnTable">ПОВОРОТНАЯ ПЛОЩАДКА</sys:String>
+    <sys:String x:Key="CurrentAngle">Текущий угол стола</sys:String>
+    <sys:String x:Key="Status">Статус</sys:String>
+    <sys:String x:Key="AlgAngle">Угол поворота</sys:String>
+    <sys:String x:Key="AlgTime">Время остановки</sys:String>
+    <sys:String x:Key="spr">Шагов на оборот</sys:String>
+    <sys:String x:Key="SettingsLang">Язык</sys:String>
+    <sys:String x:Key="AutoIP">Автоматический IP-адрес</sys:String>
+    <sys:String x:Key="Invert">Инвертировать направления</sys:String>
+
+</ResourceDictionary>
